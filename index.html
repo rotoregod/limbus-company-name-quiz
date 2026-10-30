@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f2f4">
+  <title>나는 인격 이름을 100개 이상 알고 있다</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #322630;
+      --muted: #827680;
+      --accent: #9c5267;
+      --accent-dark: #793b50;
+      --line: #ece3e7;
+      --paper: #fff;
+      --ground: #f7f3f5;
+      --mint: #eaf5ee;
+      --shadow: 0 18px 55px rgba(67, 39, 53, .09);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 10% 5%, rgba(196, 146, 166, .18), transparent 34rem),
+        radial-gradient(ellipse at 95% 22%, rgba(219, 190, 160, .2), transparent 28rem),
+        var(--ground);
+      font-family: Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .page { width: min(100% - 32px, 920px); margin: 0 auto; padding: 48px 0 38px; }
+    .hero { margin: 0 auto 26px; text-align: center; }
+    .eyebrow {
+      margin: 0 0 9px;
+      color: var(--accent);
+      font-size: .73rem;
+      font-weight: 850;
+      letter-spacing: .19em;
+    }
+    h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.8rem); letter-spacing: -.065em; line-height: 1.16; }
+    .subtitle { margin: 12px 0 0; color: var(--muted); font-size: .94rem; }
+    .game {
+      overflow: hidden;
+      border: 1px solid rgba(236, 227, 231, .95);
+      border-radius: 24px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--line); background: #fdfbfc; }
+    .stat { padding: 19px 22px 18px; text-align: center; }
+    .stat + .stat { border-left: 1px solid var(--line); }
+    .stat-label { display: block; margin-bottom: 5px; color: #968991; font-size: .67rem; font-weight: 850; letter-spacing: .13em; }
+    .stat strong { font-size: 1rem; }
+    #score { color: var(--accent-dark); font-size: 1.23rem; }
+    #timer { font-variant-numeric: tabular-nums; }
+    .play-area { padding: 25px clamp(18px, 4vw, 34px) 28px; }
+    .progress-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 9px; color: var(--muted); font-size: .79rem; }
+    .progress-track { height: 8px; overflow: hidden; border-radius: 99px; background: #f1eaed; }
+    .progress-fill { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #a75870, #d6a680); transition: width .25s ease; }
+    .entry-row { display: flex; gap: 10px; margin-top: 21px; }
+    .entry-row input {
+      width: 100%; min-width: 0; padding: 14px 16px; border: 1px solid #e8dfe3; border-radius: 13px;
+      outline: 0; color: var(--ink); background: #fff; transition: border-color .2s, box-shadow .2s;
+    }
+    .entry-row input:focus { border-color: #c58a9d; box-shadow: 0 0 0 4px rgba(156, 82, 103, .11); }
+    .entry-row input:disabled { background: #f8f6f7; }
+    .primary, .secondary, .quiet { border: 0; border-radius: 12px; font-weight: 800; transition: transform .15s, background .15s, opacity .15s; }
+    .primary:hover, .secondary:hover, .quiet:hover { transform: translateY(-1px); }
+    .primary { padding: 0 22px; color: #fff; background: var(--accent); white-space: nowrap; }
+    .primary:hover { background: var(--accent-dark); }
+    .secondary { padding: 12px 15px; color: #793b50; background: #f7edf1; }
+    .secondary:hover { background: #f0e2e8; }
+    .quiet { padding: 12px 15px; color: #70646c; background: #f3f0f2; }
+    .quiet:hover { background: #ebe6e9; }
+    button:disabled { cursor: not-allowed; opacity: .48; transform: none; }
+    .controls { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 11px; }
+    .status-message { min-height: 22px; margin: 10px 0 15px; color: #785766; font-size: .85rem; text-align: center; }
+    .answers {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; max-height: 345px; overflow: auto;
+      padding: 1px 3px 1px 1px; scrollbar-color: #dfcfd6 transparent; scrollbar-width: thin;
+    }
+    .answer {
+      display: flex; align-items: center; min-height: 37px; padding: 8px 10px; border: 1px solid #f0eaed;
+      border-radius: 9px; color: #aaa0a5; background: #fdfbfc; font-size: .8rem; transition: .2s;
+    }
+    .answer::before { width: 7px; height: 7px; flex: 0 0 7px; margin-right: 8px; border-radius: 50%; background: #e2d9dd; content: ""; }
+    .answer.found { border-color: #d3e8d9; color: #3e6e50; background: var(--mint); font-weight: 750; }
+    .answer.found::before { background: #65a779; }
+    .answer.missed { color: #a64e60; border-color: #f0d9df; background: #fff6f7; }
+    .answer.missed::before { background: #d98b99; }
+    .sinner-tag { grid-column: 1 / -1; margin: 11px 1px 1px; color: #927d87; font-size: .69rem; font-weight: 850; letter-spacing: .08em; }
+    .sinner-tag:first-child { margin-top: 0; }
+    .footer {
+      display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 15px 22px;
+      border-top: 1px solid var(--line); color: #8a7e85; font-size: .72rem;
+    }
+    .footer a { color: #846675; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+    dialog {
+      width: min(100% - 28px, 470px); max-height: calc(100vh - 28px); padding: 0; overflow: auto;
+      border: 1px solid #ece3e7; border-radius: 20px; color: var(--ink); box-shadow: 0 24px 80px rgba(49, 31, 41, .22);
+    }
+    dialog::backdrop { background: rgba(49, 34, 43, .42); backdrop-filter: blur(3px); }
+    .dialog-inner { padding: 25px; }
+    .dialog-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 21px; }
+    .dialog-top h2 { margin: 0; font-size: 1.35rem; letter-spacing: -.04em; }
+    .settings-notes { margin: -5px 0 18px; padding: 12px 14px; border-radius: 11px; color: #705d67; background: #f8f4f6; font-size: .76rem; line-height: 1.55; }
+    .settings-notes p { margin: 0; }
+    .settings-notes p + p { margin-top: 5px; }
+    .close { width: 34px; height: 34px; border: 0; border-radius: 50%; color: #766b72; background: #f3eff1; font-size: 1.2rem; }
+    .field { margin: 17px 0; }
+    .field label { display: block; margin-bottom: 8px; font-size: .82rem; font-weight: 800; }
+    .field select, .field input { width: 100%; padding: 11px 12px; border: 1px solid #e8dfe3; border-radius: 10px; color: var(--ink); background: white; }
+    .field .toggle-option { display: flex; align-items: center; gap: 9px; cursor: pointer; }
+    .field .toggle-option input { width: auto; margin: 0; accent-color: var(--accent); }
+    .field-note { display: block; margin-top: 7px; color: var(--muted); font-size: .73rem; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 22px; }
+    .dialog-actions button { min-height: 42px; }
+    .dialog-actions .primary { padding: 0 19px; }
+    @media (max-width: 600px) {
+      .page { width: min(100% - 20px, 920px); padding-top: 31px; }
+      .stat { padding: 15px 8px; }
+      .play-area { padding: 20px 14px; }
+      .answers { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+      .answer { font-size: .76rem; }
+      .entry-row { gap: 7px; }
+      .entry-row input { padding: 13px 12px; }
+      .primary { padding: 0 15px; }
+      .footer { padding: 14px; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">LIMBUS COMPANY IDENTITY QUIZ</p>
+      <h1>나는 인격 이름을<br>100개 이상 알고 있다</h1>
+      <p class="subtitle">인격 이름을 입력하고, 수감자들의 인격을 모두 찾아보세요.</p>
+    </header>
+
+    <section class="game" aria-label="림버스 컴퍼니 인격 이름 퀴즈">
+      <div class="stats">
+        <div class="stat"><span class="stat-label">QUIZ</span><strong id="quiz-mode">모든 수감자</strong></div>
+        <div class="stat"><span class="stat-label">SCORE</span><strong id="score">0 / 0</strong></div>
+        <div class="stat"><span class="stat-label">TIME</span><strong id="timer">00:00</strong></div>
+      </div>
+      <div class="play-area">
+        <div class="progress-head"><span>정답 진행률</span><span id="progress-label">0%</span></div>
+        <div class="progress-track" role="progressbar" aria-label="정답 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <form class="entry-row" id="answer-form">
+          <input id="answer-input" type="text" autocomplete="off" placeholder="인격 이름을 입력하세요" aria-label="인격 이름 입력" disabled>
+          <button class="primary" type="submit" id="submit-button" disabled>입력</button>
+        </form>
+        <div class="controls">
+          <button class="secondary" id="hint-button" type="button" disabled>힌트 <span id="hints-left">3회 남음</span></button>
+          <button class="quiet" id="give-up-button" type="button" disabled>포기하기</button>
+          <button class="quiet" id="restart-button" type="button">재시작</button>
+          <button class="quiet" id="settings-button" type="button">모드 선택</button>
+        </div>
+        <p class="status-message" id="status-message" aria-live="polite">모드 선택을 눌러 퀴즈를 시작하세요.</p>
+        <div class="answers" id="answers" aria-label="인격 목록"></div>
+      </div>
+      <footer class="footer">
+        <span>2026년 10월 참고 페이지에서 확인한 인격 명단 기준 · 팬메이드 퀴즈 · 공식 콘텐츠가 아닙니다.</span>
+        <a href="https://baslimbus.info/identity" target="_blank" rel="noreferrer">참고: 인격 도감</a>
+      </footer>
+    </section>
+  </main>
+
+  <dialog id="settings-dialog" aria-labelledby="dialog-title">
+    <form class="dialog-inner" id="settings-form">
+      <div class="dialog-top">
+        <h2 id="dialog-title">퀴즈 설정</h2>
+        <button class="close" type="button" id="close-dialog" aria-label="닫기">×</button>
+      </div>
+      <div class="settings-notes" aria-label="퀴즈 안내">
+        <p>정답은 인격 이름과 수감자 이름을 함께 입력합니다. 예: LCB 수감자 이상</p>
+        <p>인격 이름만 입력해도 같은 이름의 인격이 하나뿐이면 정답 처리됩니다.</p>
+        <p>명단은 참고 페이지의 최신 목록과 전체 도감에서 확인한 192개 인격 기준입니다.</p>
+      </div>
+      <div class="field">
+        <label for="sinner-select">수감자 범위</label>
+        <select id="sinner-select"><option value="all">모든 수감자</option></select>
+      </div>
+      <div class="field">
+        <label for="time-limit">시간 제한</label>
+        <select id="time-limit">
+          <option value="0">제한 없음</option>
+          <option value="5">5분</option>
+          <option value="10" selected>10분</option>
+          <option value="15">15분</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="hint-count">힌트 횟수</label>
+        <input id="hint-count" type="number" min="0" max="20" value="3">
+        <span class="field-note">힌트는 아직 맞히지 못한 인격 이름의 첫 글자를 알려줍니다.</span>
+      </div>
+      <div class="dialog-actions">
+        <button class="quiet" type="button" id="cancel-settings">취소</button>
+        <button class="primary" type="submit">시작하기</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const identityEntries = [
+      ["히스클리프", "오트쿠튀르::르루주 바느질의 왕"],
+      ["홍루", "오트쿠튀르::르누아르 3F 방송실"],
+      ["싱클레어", "오트쿠튀르::르루주 붉은 신"],
+      ["돈키호테", "오트쿠튀르::르누아르 브랜드 매니저"],
+      ["로쟈", "오트쿠튀르::수선실"],
+      ["료슈", "오트쿠튀르::르누아르 신발관"],
+      ["이스마엘", "오트쿠튀르::르루주 부티크"],
+      ["홍루", "동부 섕크 협회 3과"],
+      ["이상", "LCE E.G.O::차원찢개"],
+      ["그레고르", "새벽 사무소 대표"],
+      ["파우스트", "새벽 사무소 해결사"],
+      ["로쟈", "거미집 엄지 아비"],
+      ["히스클리프", "거미집 엄지 제자"],
+      ["이스마엘", "LCD 현장추리팀"],
+      ["홍루", "S사 추노꾼"],
+      ["오티스", "거미집 중지 아비"],
+      ["료슈", "거미집의 검"],
+      ["히스클리프", "중지 작은 형님"],
+      ["로쟈", "약지 야수파 도슨트"],
+      ["뫼르소", "약지 야수파 스튜던트"],
+      ["홍루", "거미집 약지 아비"],
+      ["파우스트", "거미집 약지 제자"],
+      ["그레고르", "LCE E.G.O::AEDD"],
+      ["뫼르소", "로보토미 E.G.O::호넷 [변조]"],
+      ["료슈", "로보토미 E.G.O::잔향 · 외로움"],
+      ["이상", "거미집 검지 아비"],
+      ["싱클레어", "거미집 소지 제자"],
+      ["그레고르", "로보토미 E.G.O::램프"],
+      ["이스마엘", "거미집 중지 제자"],
+      ["돈키호테", "검지 대행자 - 개화 E.G.O::대행"],
+      ["파우스트", "검지 수행자: [쪽지]"],
+      ["오티스", "LCA 우제트 선봉 3팀 팀장"],
+      ["로쟈", "R사 제 4무리 순록팀"],
+      ["료슈", "홍원 방랑무사"],
+      ["히스클리프", "흑수 - 유 필두"],
+      ["돈키호테", "흑수 - 미"],
+      ["그레고르", "밤의 송곳 카피타노"],
+      ["이스마엘", "정사무소 대표"],
+      ["뫼르소", "라만차랜드 왕자"],
+      ["히스클리프", "W사 4등급 정리 요원 - CCA"],
+      ["파우스트", "동부 시 협회 3과"],
+      ["료슈", "N사 E.G.O::경멸, 경외"],
+      ["이상", "흑수 - 오 필두"],
+      ["싱클레어", "흑수 - 유"],
+      ["홍루", "홍원 군주"],
+      ["오티스", "T사 3등급 강력징수직 직원"],
+      ["돈키호테", "로보토미 E.G.O::사랑과 증오의 이름으로"],
+      ["로쟈", "로보토미 E.G.O::눈물로 벼려낸 검"],
+      ["이상", "N사 E.G.O::흉탄"],
+      ["뫼르소", "동부 엄지 카포 IIII"],
+      ["싱클레어", "동부 엄지 솔다토 II"],
+      ["이스마엘", "가주 후보"],
+      ["파우스트", "흑수 - 묘 필두"],
+      ["로쟈", "흑수 - 사"],
+      ["그레고르", "흑수 - 사"],
+      ["홍루", "R사 제 4무리 순록팀"],
+      ["싱클레어", "중지 작은 아우"],
+      ["료슈", "흑수 - 묘"],
+      ["오티스", "흑수 - 묘"],
+      ["돈키호테", "동부 섕크 협회 3과"],
+      ["그레고르", "불주먹 사무소 생존자"],
+      ["이상", "남부 리우 협회 3과"],
+      ["이스마엘", "흑운회 부조장"],
+      ["히스클리프", "흑운회 와카슈"],
+      ["파우스트", "LCE E.G.O::홍염살"],
+      ["이상", "LCE E.G.O::초롱"],
+      ["홍루", "마침표 사무소 대표"],
+      ["히스클리프", "마침표 사무소 해결사"],
+      ["돈키호테", "라만차랜드 실장"],
+      ["싱클레어", "북부 제뱌찌 협회 3과"],
+      ["로쟈", "라만차랜드 공주"],
+      ["그레고르", "라만차랜드 신부"],
+      ["홍루", "송곳니 사냥 사무소 해결사"],
+      ["오티스", "라만차랜드 이발사"],
+      ["싱클레어", "서부 츠바이 협회 3과"],
+      ["뫼르소", "서부 섕크 협회 3과"],
+      ["이스마엘", "서부 츠바이 협회 3과"],
+      ["로쟈", "북부 제뱌찌 협회 3과"],
+      ["이상", "로보토미 E.G.O::엄숙한 애도"],
+      ["료슈", "로보토미 E.G.O::적안 · 참회"],
+      ["히스클리프", "와일드헌트"],
+      ["히스클리프", "멀티크랙 사무소 해결사"],
+      ["파우스트", "멀티크랙 사무소 대표"],
+      ["오티스", "W사 3등급 정리 요원 팀장"],
+      ["뫼르소", "남부 디에치 협회 4과 부장"],
+      ["로쟈", "T사 2등급 징수직 직원"],
+      ["돈키호테", "T사 3등급 징수직 직원"],
+      ["료슈", "20구 유로지비"],
+      ["홍루", "20구 유로지비"],
+      ["싱클레어", "새벽 사무소 해결사"],
+      ["이스마엘", "피쿼드호 선장"],
+      ["오티스", "약지 점묘파 스튜던트"],
+      ["이상", "약지 점묘파 스튜던트"],
+      ["이스마엘", "에드가 가문 버틀러"],
+      ["료슈", "에드가 가문 치프 버틀러"],
+      ["파우스트", "워더링하이츠 버틀러"],
+      ["그레고르", "에드가 가문 승계자"],
+      ["뫼르소", "데드레빗츠 보스"],
+      ["오티스", "워더링하이츠 치프 버틀러"],
+      ["히스클리프", "남부 외우피 협회 3과"],
+      ["료슈", "남부 리우 협회 4과"],
+      ["로쟈", "남부 리우 협회 4과 부장"],
+      ["그레고르", "흑운회 부조장"],
+      ["파우스트", "검계 살수"],
+      ["뫼르소", "검계 우두머리"],
+      ["돈키호테", "검계 살수"],
+      ["이상", "남부 디에치 협회 4과"],
+      ["홍루", "남부 디에치 협회 4과"],
+      ["돈키호테", "로보토미 E.G.O::초롱"],
+      ["오티스", "로보토미 E.G.O::마탄"],
+      ["이상", "피쿼드호 일등 항해사"],
+      ["이상", "W사 3등급 정리 요원"],
+      ["이상", "어금니 사무소 해결사"],
+      ["이상", "개화 E.G.O::동백"],
+      ["이상", "검계 살수"],
+      ["이상", "남부 세븐 협회 6과"],
+      ["이상", "LCB 수감자"],
+      ["싱클레어", "남부 섕크 협회 4과 부장"],
+      ["싱클레어", "어금니 보트 센터 해결사"],
+      ["싱클레어", "로보토미 E.G.O::홍적"],
+      ["싱클레어", "쥐어들 자"],
+      ["싱클레어", "검계 살수"],
+      ["싱클레어", "마리아치 보스"],
+      ["싱클레어", "남부 츠바이 협회 6과"],
+      ["싱클레어", "LCB 수감자"],
+      ["료슈", "LCCB 대리"],
+      ["료슈", "W사 3등급 정리 요원"],
+      ["료슈", "료.고.파. 주방장"],
+      ["료슈", "흑운회 와카슈"],
+      ["료슈", "남부 세븐 협회 6과"],
+      ["료슈", "LCB 수감자"],
+      ["로쟈", "남부 디에치 협회 4과"],
+      ["로쟈", "남부 츠바이 협회 5과"],
+      ["로쟈", "장미스패너 공방 대표"],
+      ["로쟈", "N사 중간 망치"],
+      ["로쟈", "흑운회 와카슈"],
+      ["로쟈", "LCCB 대리"],
+      ["로쟈", "LCB 수감자"],
+      ["오티스", "남부 섕크 협회 4과"],
+      ["오티스", "어금니 사무소 해결사"],
+      ["오티스", "남부 세븐 협회 6과 부장"],
+      ["오티스", "검계 살수"],
+      ["오티스", "G사 부장"],
+      ["오티스", "LCB 수감자"],
+      ["뫼르소", "중지 작은 아우"],
+      ["뫼르소", "R사 제 4무리 코뿔소팀"],
+      ["뫼르소", "장미스패너 공방 해결사"],
+      ["뫼르소", "N사 큰 망치"],
+      ["뫼르소", "W사 2등급 정리 요원"],
+      ["뫼르소", "남부 리우 협회 6과"],
+      ["뫼르소", "LCB 수감자"],
+      ["이스마엘", "어금니 보트 센터 해결사"],
+      ["이스마엘", "남부 리우 협회 4과"],
+      ["이스마엘", "로보토미 E.G.O::출렁임"],
+      ["이스마엘", "R사 제 4무리 순록팀"],
+      ["이스마엘", "LCCB 대리"],
+      ["이스마엘", "남부 시 협회 5과"],
+      ["이스마엘", "LCB 수감자"],
+      ["홍루", "갈고리 사무소 해결사"],
+      ["홍루", "W사 2등급 정리 요원"],
+      ["홍루", "K사 3등급 적출직 직원"],
+      ["홍루", "남부 리우 협회 5과"],
+      ["홍루", "콩콩이파 두목"],
+      ["홍루", "흑운회 와카슈"],
+      ["홍루", "LCB 수감자"],
+      ["히스클리프", "피쿼드호 작살잡이"],
+      ["히스클리프", "남부 세븐 협회 4과"],
+      ["히스클리프", "로보토미 E.G.O::여우비"],
+      ["히스클리프", "N사 작은 망치"],
+      ["히스클리프", "R사 제 4무리 토끼팀"],
+      ["히스클리프", "남부 시 협회 5과"],
+      ["히스클리프", "LCB 수감자"],
+      ["그레고르", "쌍갈고리 해적단 부선장"],
+      ["그레고르", "남부 츠바이 협회 4과"],
+      ["그레고르", "장미스패너 공방 해결사"],
+      ["그레고르", "료.고.파. 조수"],
+      ["그레고르", "G사 일등대리"],
+      ["그레고르", "남부 리우 협회 6과"],
+      ["그레고르", "LCB 수감자"],
+      ["파우스트", "로보토미 E.G.O::후회"],
+      ["파우스트", "남부 세븐 협회 4과"],
+      ["파우스트", "남부 츠바이 협회 4과"],
+      ["파우스트", "쥐는 자"],
+      ["파우스트", "살아남은 로보토미 직원"],
+      ["파우스트", "W사 2등급 정리 요원"],
+      ["파우스트", "LCB 수감자"],
+      ["돈키호테", "중지 작은 아우"],
+      ["돈키호테", "남부 섕크 협회 5과 부장"],
+      ["돈키호테", "N사 중간 망치"],
+      ["돈키호테", "W사 3등급 정리 요원"],
+      ["돈키호테", "남부 시 협회 5과 부장"],
+      ["돈키호테", "LCB 수감자"]
+    ];
+
+    const allIdentities = identityEntries.map(([sinner, title], index) => ({
+      sinner,
+      title,
+      name: `${title} ${sinner}`,
+      index
+    }));
+    const sinners = [
+      "이상", "파우스트", "돈키호테", "료슈", "뫼르소", "홍루",
+      "히스클리프", "이스마엘", "로쟈", "싱클레어", "오티스", "그레고르"
+    ];
+    const dialog = document.querySelector("#settings-dialog");
+    const sinnerSelect = document.querySelector("#sinner-select");
+    const timeSelect = document.querySelector("#time-limit");
+    const hintInput = document.querySelector("#hint-count");
+    const input = document.querySelector("#answer-input");
+    const score = document.querySelector("#score");
+    const timer = document.querySelector("#timer");
+    const list = document.querySelector("#answers");
+    const status = document.querySelector("#status-message");
+    const hintButton = document.querySelector("#hint-button");
+    const giveUpButton = document.querySelector("#give-up-button");
+    const progressTrack = document.querySelector(".progress-track");
+
+    for (const sinner of sinners) {
+      const option = document.createElement("option");
+      option.value = sinner;
+      option.textContent = sinner;
+      sinnerSelect.append(option);
+    }
+
+    let activeIdentities = [];
+    let found = new Set();
+    let hintsRemaining = 3;
+    let elapsedSeconds = 0;
+    let timeLimitSeconds = 0;
+    let timerId = null;
+    let gameStarted = false;
+    let gameFinished = false;
+
+    function formatTime(seconds) {
+      const minutes = Math.floor(seconds / 60).toString().padStart(2, "0");
+      const remainder = (seconds % 60).toString().padStart(2, "0");
+      return `${minutes}:${remainder}`;
+    }
+
+    function updateClock() {
+      timer.textContent = formatTime(elapsedSeconds);
+    }
+
+    function renderAnswers(revealMissed = false) {
+      list.replaceChildren();
+      const groups = new Map();
+      for (const identity of activeIdentities) {
+        if (!groups.has(identity.sinner)) groups.set(identity.sinner, []);
+        groups.get(identity.sinner).push(identity);
+      }
+
+      for (const sinner of sinners) {
+        const identities = groups.get(sinner);
+        if (!identities) continue;
+        const heading = document.createElement("div");
+        heading.className = "sinner-tag";
+        heading.textContent = sinner;
+        list.append(heading);
+        for (const identity of identities) {
+          const item = document.createElement("div");
+          item.className = "answer";
+          item.textContent = found.has(identity.index) || revealMissed ? identity.name : "???";
+          if (found.has(identity.index)) item.classList.add("found");
+          else if (revealMissed) item.classList.add("missed");
+          list.append(item);
+        }
+      }
+    }
+
+    function updateProgress() {
+      const total = activeIdentities.length;
+      const percentage = total ? Math.round((found.size / total) * 100) : 0;
+      score.textContent = `${found.size} / ${total}`;
+      document.querySelector("#progress-label").textContent = `${percentage}%`;
+      document.querySelector("#progress-fill").style.width = `${percentage}%`;
+      progressTrack.setAttribute("aria-valuenow", percentage);
+      document.querySelector("#hints-left").textContent = `${hintsRemaining}회 남음`;
+      hintButton.disabled = !gameStarted || gameFinished || hintsRemaining < 1;
+      giveUpButton.disabled = !gameStarted || gameFinished;
+      input.disabled = !gameStarted || gameFinished;
+      document.querySelector("#submit-button").disabled = !gameStarted || gameFinished;
+    }
+
+    function finishGame(message, revealMissed) {
+      gameFinished = true;
+      clearInterval(timerId);
+      timerId = null;
+      renderAnswers(revealMissed);
+      updateProgress();
+      status.textContent = message;
+      input.blur();
+    }
+
+    function startTimer() {
+      clearInterval(timerId);
+      timerId = setInterval(() => {
+        elapsedSeconds += 1;
+        updateClock();
+        if (timeLimitSeconds && elapsedSeconds >= timeLimitSeconds) {
+          finishGame(`시간 종료! ${found.size}개의 인격을 맞혔어요.`, true);
+        }
+      }, 1000);
+    }
+
+    function startGame() {
+      const chosenSinner = sinnerSelect.value;
+      activeIdentities = allIdentities.filter(identity => chosenSinner === "all" || identity.sinner === chosenSinner);
+      found = new Set();
+      hintsRemaining = Math.max(0, Math.min(20, Number.parseInt(hintInput.value, 10) || 0));
+      hintInput.value = hintsRemaining;
+      elapsedSeconds = 0;
+      timeLimitSeconds = (Number(timeSelect.value) || 0) * 60;
+      gameStarted = true;
+      gameFinished = false;
+      document.querySelector("#quiz-mode").textContent = chosenSinner === "all" ? "모든 수감자" : chosenSinner;
+      updateClock();
+      renderAnswers();
+      updateProgress();
+      status.textContent = `${activeIdentities.length}개의 인격 이름을 맞혀보세요!`;
+      dialog.close();
+      startTimer();
+      input.value = "";
+      input.focus();
+    }
+
+    function normalize(value) {
+      return value.trim().replace(/\s+/g, " ").toLocaleLowerCase();
+    }
+
+    document.querySelector("#answer-form").addEventListener("submit", event => {
+      event.preventDefault();
+      if (!gameStarted || gameFinished) return;
+      const guess = normalize(input.value);
+      if (!guess) return;
+      const matchesGuess = identity => {
+        const fullName = normalize(identity.name);
+        const matchingTitles = activeIdentities.filter(item => normalize(item.title) === guess);
+        return fullName === guess || (matchingTitles.length === 1 && matchingTitles[0].index === identity.index);
+      };
+      const match = activeIdentities.find(identity => !found.has(identity.index) && matchesGuess(identity));
+      if (match) {
+        found.add(match.index);
+        status.textContent = `${match.name} 정답!`;
+        renderAnswers();
+        updateProgress();
+        if (found.size === activeIdentities.length) {
+          finishGame(`완벽해요! ${activeIdentities.length}개의 인격 이름을 모두 맞혔어요.`, false);
+        }
+      } else if (activeIdentities.some(matchesGuess)) {
+        status.textContent = "이미 맞힌 이름이에요.";
+      } else {
+        status.textContent = "명단에 없는 이름이에요. 띄어쓰기를 확인해보세요.";
+      }
+      input.value = "";
+      if (!gameFinished) input.focus();
+    });
+
+    hintButton.addEventListener("click", () => {
+      if (!gameStarted || gameFinished || hintsRemaining < 1) return;
+      const missing = activeIdentities.filter(identity => !found.has(identity.index));
+      if (!missing.length) return;
+      const pick = missing[Math.floor(Math.random() * missing.length)];
+      hintsRemaining -= 1;
+      updateProgress();
+      status.textContent = `힌트: 아직 찾지 못한 인격 중 하나는 ‘${pick.title[0]}’(으)로 시작해요.`;
+    });
+
+    giveUpButton.addEventListener("click", () => {
+      if (gameStarted && !gameFinished) finishGame(`퀴즈 종료! ${activeIdentities.length}개 중 ${found.size}개를 맞혔어요.`, true);
+    });
+
+    function openSettings() {
+      if (gameStarted && !gameFinished) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+      dialog.showModal();
+    }
+
+    document.querySelector("#restart-button").addEventListener("click", openSettings);
+    document.querySelector("#settings-button").addEventListener("click", openSettings);
+    document.querySelector("#close-dialog").addEventListener("click", () => dialog.close());
+    document.querySelector("#cancel-settings").addEventListener("click", () => dialog.close());
+    dialog.addEventListener("close", () => {
+      if (gameStarted && !gameFinished && !timerId) startTimer();
+    });
+    document.querySelector("#settings-form").addEventListener("submit", event => {
+      event.preventDefault();
+      startGame();
+    });
+    dialog.addEventListener("click", event => {
+      if (event.target === dialog) dialog.close();
+    });
+
+    score.textContent = `0 / ${allIdentities.length}`;
+    document.querySelector("#progress-label").textContent = "0%";
+    progressTrack.setAttribute("aria-valuenow", "0");
+    renderAnswers();
+    dialog.showModal();
+  </script>
+</body>
+</html>
