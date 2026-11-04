@@ -197,7 +197,6 @@
       </div>
       <footer class="footer">
         <span>참고 도감의 명단 기준 · 팬메이드 퀴즈 · 공식 콘텐츠가 아닙니다.</span>
-        <a id="catalog-link" href="https://baslimbus.info/identity" target="_blank" rel="noreferrer">참고: 인격 도감</a>
       </footer>
     </section>
   </main>
@@ -601,7 +600,6 @@
     const answerInput = document.querySelector("#answer-input");
     const title = document.querySelector("h1");
     const subtitle = document.querySelector(".subtitle");
-    const catalogLink = document.querySelector("#catalog-link");
     const catalogCountNote = document.querySelector("#catalog-count-note");
     const answerFormatNote = document.querySelector("#answer-format-note");
     let activeType = "identity";
@@ -632,8 +630,6 @@
       answerInput.placeholder = `${currentTypeLabel()} 이름을 입력하세요`;
       answerInput.setAttribute("aria-label", `${currentTypeLabel()} 이름 입력`);
       list.setAttribute("aria-label", `${currentTypeLabel()} 목록`);
-      catalogLink.href = isIdentity ? "https://baslimbus.info/identity" : "https://baslimbus.info/ego";
-      catalogLink.textContent = isIdentity ? "참고: 인격 도감" : "참고: E.G.O 도감";
       catalogCountNote.textContent = `참고 도감에서 확인한 ${currentDataset().length}개 ${currentTypeLabel()} 기준입니다.`;
       answerFormatNote.textContent = isIdentity
         ? "정답은 인격 이름과 수감자 이름을 함께 입력합니다. 예: LCB 수감자 이상"
