@@ -447,7 +447,7 @@
       ["그레고르", "입주 신고"],
       ["돈키호테", "난 가위를 낼게, 너는?"],
       ["이상", "엄숙한 애도"],
-      ["뫼르소", "착영휘도[着影揮刀]"],
+      ["뫼르소", "착영휘도 [着影揮刀]"],
       ["로쟈", "노을 속으로"],
       ["파우스트", "홍염살"],
       ["싱클레어", "하모니"],
@@ -461,8 +461,8 @@
       ["이스마엘", "파도의 만가"],
       ["뫼르소", "분쇄될 과거"],
       ["돈키호테", "사랑과 증오의 이름으로"],
-      ["홍루", "오혈읍루[汚血泣淚]"],
-      ["싱클레어", "오혈읍루[汚血泣淚]"],
+      ["홍루", "오혈읍루 [汚血泣淚]"],
+      ["싱클레어", "오혈읍루 [汚血泣淚]"],
       ["이스마엘", "즉저살 [蝍蛆殺]"],
       ["돈키호테", "홍적"],
       ["로쟈", "지정 재판"],
@@ -571,14 +571,11 @@
       index
     }));
     const hanjaOptionalEgoTitles = new Set([
-      "오혈읍루[汚血泣淚]",
+      "오혈읍루 [汚血泣淚]",
       "삼천대세계 [三千大世界]",
-      "착영휘도[着影揮刀]",
+      "착영휘도 [着影揮刀]",
       "영작오 [宁作吾]",
       "즉저살 [蝍蛆殺]"
-    ]);
-    const legacyEgoTitles = new Map([
-      ["즉저살 [蝍蛆殺]", "즉저살 (蝍蛆殺)"]
     ]);
     const sinners = [
       "이상", "파우스트", "돈키호테", "료슈", "뫼르소", "홍루",
@@ -815,15 +812,10 @@
         const alternateHanjaName = titleWithoutHanja === null
           ? null
           : `${titleWithoutHanja} ${identity.sinner}`;
-        const legacyTitle = activeType === "ego" ? legacyEgoTitles.get(identity.title) : null;
-        const legacyName = legacyTitle === undefined || legacyTitle === null
-          ? null
-          : `${legacyTitle} ${identity.sinner}`;
         const matchingTitles = activeIdentities.filter(item => normalize(item.title) === guess);
         return fullName === guess
           || (alternateName !== null && normalize(alternateName) === guess)
           || (alternateHanjaName !== null && normalize(alternateHanjaName) === guess)
-          || (legacyName !== null && normalize(legacyName) === guess)
           || (matchingTitles.length === 1 && matchingTitles[0].index === identity.index);
       };
       const match = activeIdentities.find(identity => !found.has(identity.index) && matchesGuess(identity));
