@@ -786,8 +786,13 @@
     function normalize(value) {
       return value.trim()
         .replace(/[【】]/g, bracket => bracket === "【" ? "[" : "]")
+        .replace(/\[[^\]]*\]/g, "")
+        .replace(/開/g, "개")
+        .replace(/\s*\(\s*개\s*\)/g, "(개)")
+        .replace(/::\s*/g, "::")
         .replace(/\s+/g, " ")
-        .toLocaleLowerCase();
+        .toLocaleLowerCase()
+        .trim();
     }
 
     document.querySelector("#answer-form").addEventListener("submit", event => {
