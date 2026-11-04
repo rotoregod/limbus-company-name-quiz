@@ -46,6 +46,27 @@
     }
     h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.8rem); letter-spacing: -.065em; line-height: 1.16; }
     .subtitle { margin: 12px 0 0; color: var(--muted); font-size: .94rem; }
+    .quiz-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 0 auto 18px;
+    }
+    .quiz-tab {
+      min-width: 116px;
+      padding: 11px 20px;
+      border: 1px solid #e8dfe3;
+      border-radius: 12px;
+      color: #766b72;
+      background: rgba(255, 255, 255, .76);
+      font-weight: 800;
+    }
+    .quiz-tab[aria-selected="true"] {
+      border-color: var(--accent);
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 5px 16px rgba(156, 82, 103, .18);
+    }
     .game {
       overflow: hidden;
       border: 1px solid rgba(236, 227, 231, .95);
@@ -145,7 +166,12 @@
       <p class="subtitle">인격 이름을 입력하고, 수감자들의 인격을 모두 찾아보세요.</p>
     </header>
 
-    <section class="game" aria-label="림버스 컴퍼니 인격 이름 퀴즈">
+    <div class="quiz-tabs" role="tablist" aria-label="퀴즈 종류">
+      <button class="quiz-tab" id="identity-tab" type="button" role="tab" aria-selected="true" aria-controls="quiz-panel">인격</button>
+      <button class="quiz-tab" id="ego-tab" type="button" role="tab" aria-selected="false" aria-controls="quiz-panel" tabindex="-1">E.G.O</button>
+    </div>
+
+    <section class="game" id="quiz-panel" role="tabpanel" aria-labelledby="identity-tab" aria-label="림버스 컴퍼니 인격 이름 퀴즈">
       <div class="stats">
         <div class="stat"><span class="stat-label">QUIZ</span><strong id="quiz-mode">모든 수감자</strong></div>
         <div class="stat"><span class="stat-label">SCORE</span><strong id="score">0 / 0</strong></div>
@@ -170,8 +196,8 @@
         <div class="answers" id="answers" aria-label="인격 목록"></div>
       </div>
       <footer class="footer">
-        <span>2026년 10월 참고 페이지에서 확인한 인격 명단 기준 · 팬메이드 퀴즈 · 공식 콘텐츠가 아닙니다.</span>
-        <a href="https://baslimbus.info/identity" target="_blank" rel="noreferrer">참고: 인격 도감</a>
+        <span>참고 도감의 명단 기준 · 팬메이드 퀴즈 · 공식 콘텐츠가 아닙니다.</span>
+        <a id="catalog-link" href="https://baslimbus.info/identity" target="_blank" rel="noreferrer">참고: 인격 도감</a>
       </footer>
     </section>
   </main>
@@ -182,9 +208,13 @@
         <h2 id="dialog-title">퀴즈 설정</h2>
         <button class="close" type="button" id="close-dialog" aria-label="닫기">×</button>
       </div>
+      <div class="quiz-tabs" role="tablist" aria-label="퀴즈 종류">
+        <button class="quiz-tab" id="settings-identity-tab" type="button" role="tab" aria-selected="true">인격</button>
+        <button class="quiz-tab" id="settings-ego-tab" type="button" role="tab" aria-selected="false">E.G.O</button>
+      </div>
       <div class="settings-notes" aria-label="퀴즈 안내">
-        <p>정답은 인격 이름과 수감자 이름을 함께 입력합니다. 예: LCB 수감자 이상</p>
-        <p>명단은 참고 페이지의 최신 목록과 전체 도감에서 확인한 192개 인격 기준입니다.</p>
+        <p id="answer-format-note">정답은 인격 이름과 수감자 이름을 함께 입력합니다. 예: LCB 수감자 이상</p>
+        <p id="catalog-count-note"></p>
       </div>
       <div class="field">
         <label for="sinner-select">수감자 범위</label>
@@ -204,7 +234,7 @@
       <div class="field">
         <label for="hint-count">힌트 횟수</label>
         <input id="hint-count" type="number" min="0" max="20" value="3">
-        <span class="field-note">힌트는 아직 맞히지 못한 인격 이름의 첫 글자를 알려줍니다.</span>
+        <span class="field-note" id="hint-note">힌트는 아직 맞히지 못한 인격 이름의 첫 글자를 알려줍니다.</span>
       </div>
       <div class="dialog-actions">
         <button class="quiet" type="button" id="cancel-settings">취소</button>
@@ -409,7 +439,132 @@
       ["돈키호테", "LCB 수감자"]
     ];
 
+    const egoEntries = [
+      ["뫼르소", "구멍"],
+      ["파우스트", "구멍"],
+      ["로쟈", "거울촉각"],
+      ["홍루", "거절선포"],
+      ["그레고르", "입주 신고"],
+      ["돈키호테", "난 가위를 낼게, 너는?"],
+      ["이상", "엄숙한 애도"],
+      ["뫼르소", "착영휘도"],
+      ["로쟈", "노을 속으로"],
+      ["파우스트", "홍염살"],
+      ["싱클레어", "하모니"],
+      ["료슈", "삼천대세계 [三千大世界]"],
+      ["이상", "삼천대세계 [三千大世界]"],
+      ["히스클리프", "입주 신고"],
+      ["오티스", "난 가위를 낼게, 너는?"],
+      ["그레고르", "눈부시지 않은 영광"],
+      ["파우스트", "명령: 용해"],
+      ["홍루", "영작오"],
+      ["이스마엘", "파도의 만가"],
+      ["뫼르소", "분쇄될 과거"],
+      ["돈키호테", "사랑과 증오의 이름으로"],
+      ["홍루", "오혈읍루[汚血泣淚]"],
+      ["싱클레어", "오혈읍루[汚血泣淚]"],
+      ["이스마엘", "즉저살(蝍蛆殺)"],
+      ["돈키호테", "홍적"],
+      ["로쟈", "지정 재판"],
+      ["파우스트", "흉통"],
+      ["료슈", "흉통"],
+      ["오티스", "마탄"],
+      ["그레고르", "크리스마스 악몽"],
+      ["이스마엘", "크리스마스 악몽"],
+      ["히스클리프", "쏠린 관성"],
+      ["이상", "흉탄"],
+      ["돈키호테", "갈망 - 미르칼라"],
+      ["뫼르소", "갈망 - 미르칼라"],
+      ["로쟈", "저주못"],
+      ["싱클레어", "저주못"],
+      ["홍루", "올가미"],
+      ["파우스트", "올가미"],
+      ["이스마엘", "지난 날"],
+      ["그레고르", "엄숙한 애도"],
+      ["오티스", "차원찢개"],
+      ["히스클리프", "흉탄"],
+      ["료슈", "경멸, 경외"],
+      ["오티스", "구속"],
+      ["히스클리프", "구속"],
+      ["뫼르소", "전기울음"],
+      ["돈키호테", "전기울음"],
+      ["그레고르", "지난 날"],
+      ["이상", "지난 날"],
+      ["파우스트", "영속"],
+      ["싱클레어", "낮은울음"],
+      ["로쟈", "핏빛욕망"],
+      ["홍루", "낮은울음"],
+      ["이스마엘", "날갯짓"],
+      ["그레고르", "가시 화원"],
+      ["돈키호테", "소망석"],
+      ["이상", "여우비"],
+      ["이상", "차원찢개"],
+      ["이상", "4번째 성냥불"],
+      ["이상", "소망석"],
+      ["이상", "오감도"],
+      ["싱클레어", "9장 2절"],
+      ["싱클레어", "초롱"],
+      ["싱클레어", "평생 스튜"],
+      ["싱클레어", "다가올날"],
+      ["싱클레어", "지식나무의 가지"],
+      ["료슈", "맹목"],
+      ["료슈", "소다"],
+      ["료슈", "적안(開)"],
+      ["료슈", "적안"],
+      ["료슈", "4번째 성냥불"],
+      ["료슈", "삼라염상"],
+      ["로쟈", "집행"],
+      ["로쟈", "들끓는 부식"],
+      ["로쟈", "얼음다리"],
+      ["로쟈", "4번째 성냥불"],
+      ["로쟈", "던져지는 것"],
+      ["오티스", "홀리데이"],
+      ["오티스", "여우비"],
+      ["오티스", "검은줄기"],
+      ["오티스", "공즉시색"],
+      ["오티스", "토 파토스 마토스"],
+      ["뫼르소", "후회"],
+      ["뫼르소", "카포테"],
+      ["뫼르소", "나사빠진 일격"],
+      ["뫼르소", "집행"],
+      ["뫼르소", "타인의 사슬"],
+      ["이스마엘", "맹목"],
+      ["이스마엘", "카포테"],
+      ["이스마엘", "분홍욕망"],
+      ["이스마엘", "홍염살"],
+      ["이스마엘", "작살박이"],
+      ["홍루", "들끓는 부식"],
+      ["홍루", "소다"],
+      ["홍루", "차원찢개"],
+      ["홍루", "분홍욕망"],
+      ["홍루", "허환경"],
+      ["히스클리프", "홀리데이"],
+      ["히스클리프", "공즉시색"],
+      ["히스클리프", "AEDD"],
+      ["히스클리프", "전봇대"],
+      ["히스클리프", "시체자루"],
+      ["그레고르", "AEDD"],
+      ["그레고르", "눈속임"],
+      ["그레고르", "초롱"],
+      ["그레고르", "어느날 갑자기"],
+      ["파우스트", "9장 2절"],
+      ["파우스트", "전봇대"],
+      ["파우스트", "물주머니"],
+      ["파우스트", "저주못"],
+      ["파우스트", "표상 방출기"],
+      ["돈키호테", "평생 스튜"],
+      ["돈키호테", "전봇대"],
+      ["돈키호테", "물주머니"],
+      ["돈키호테", "라 샹그레 데 산쵸"]
+    ];
+
     const allIdentities = identityEntries.map(([sinner, title], index) => ({
+      sinner,
+      title,
+      name: `${title} ${sinner}`,
+      index
+    }));
+    const allEgos = egoEntries.map(([sinner, title], index) => ({
       sinner,
       title,
       name: `${title} ${sinner}`,
@@ -431,6 +586,91 @@
     const hintButton = document.querySelector("#hint-button");
     const giveUpButton = document.querySelector("#give-up-button");
     const progressTrack = document.querySelector(".progress-track");
+    const identityTab = document.querySelector("#identity-tab");
+    const egoTab = document.querySelector("#ego-tab");
+    const settingsIdentityTab = document.querySelector("#settings-identity-tab");
+    const settingsEgoTab = document.querySelector("#settings-ego-tab");
+    const quizPanel = document.querySelector("#quiz-panel");
+    const answerInput = document.querySelector("#answer-input");
+    const title = document.querySelector("h1");
+    const subtitle = document.querySelector(".subtitle");
+    const catalogLink = document.querySelector("#catalog-link");
+    const catalogCountNote = document.querySelector("#catalog-count-note");
+    const answerFormatNote = document.querySelector("#answer-format-note");
+    let activeType = "identity";
+
+    function currentDataset() {
+      return activeType === "identity" ? allIdentities : allEgos;
+    }
+
+    function currentTypeLabel() {
+      return activeType === "identity" ? "인격" : "E.G.O";
+    }
+
+    function updateTabView() {
+      const isIdentity = activeType === "identity";
+      document.title = `나는 ${currentTypeLabel()} 이름을 100개 이상 알고 있다`;
+      identityTab.setAttribute("aria-selected", String(isIdentity));
+      egoTab.setAttribute("aria-selected", String(!isIdentity));
+      settingsIdentityTab.setAttribute("aria-selected", String(isIdentity));
+      settingsEgoTab.setAttribute("aria-selected", String(!isIdentity));
+      identityTab.tabIndex = isIdentity ? 0 : -1;
+      egoTab.tabIndex = isIdentity ? -1 : 0;
+      quizPanel.setAttribute("aria-labelledby", isIdentity ? "identity-tab" : "ego-tab");
+      quizPanel.setAttribute("aria-label", `림버스 컴퍼니 ${currentTypeLabel()} 이름 퀴즈`);
+      title.innerHTML = isIdentity ? "나는 인격 이름을<br>100개 이상 알고 있다" : "나는 E.G.O 이름을<br>100개 이상 알고 있다";
+      subtitle.textContent = isIdentity
+        ? "인격 이름을 입력하고, 수감자들의 인격을 모두 찾아보세요."
+        : "E.G.O 이름을 입력하고, 수감자들의 E.G.O를 모두 찾아보세요.";
+      answerInput.placeholder = `${currentTypeLabel()} 이름을 입력하세요`;
+      answerInput.setAttribute("aria-label", `${currentTypeLabel()} 이름 입력`);
+      list.setAttribute("aria-label", `${currentTypeLabel()} 목록`);
+      catalogLink.href = isIdentity ? "https://baslimbus.info/identity" : "https://baslimbus.info/ego";
+      catalogLink.textContent = isIdentity ? "참고: 인격 도감" : "참고: E.G.O 도감";
+      catalogCountNote.textContent = `참고 도감에서 확인한 ${currentDataset().length}개 ${currentTypeLabel()} 기준입니다.`;
+      answerFormatNote.textContent = isIdentity
+        ? "정답은 인격 이름과 수감자 이름을 함께 입력합니다. 예: LCB 수감자 이상"
+        : "정답은 E.G.O 이름과 수감자 이름을 함께 입력합니다. 예: 물주머니 파우스트";
+      document.querySelector("#hint-note").textContent = `힌트는 아직 맞히지 못한 ${currentTypeLabel()} 이름의 첫 글자를 알려줍니다.`;
+      document.querySelector("#quiz-mode").textContent = `모든 수감자 · ${currentTypeLabel()}`;
+      document.querySelector("#score").textContent = `0 / ${currentDataset().length}`;
+      document.querySelector("#progress-label").textContent = "0%";
+      document.querySelector("#progress-fill").style.width = "0%";
+      progressTrack.setAttribute("aria-valuenow", "0");
+      list.replaceChildren();
+    }
+
+    function selectQuizType(type) {
+      if (activeType === type) return;
+      activeType = type;
+      clearInterval(timerId);
+      timerId = null;
+      gameStarted = false;
+      gameFinished = false;
+      activeIdentities = [];
+      found = new Set();
+      elapsedSeconds = 0;
+      updateClock();
+      updateTabView();
+      updateProgress();
+      status.textContent = "퀴즈 종류를 선택했어요. 설정을 확인하고 시작하세요.";
+      if (dialog.open) return;
+      dialog.showModal();
+    }
+
+    identityTab.addEventListener("click", () => selectQuizType("identity"));
+    egoTab.addEventListener("click", () => selectQuizType("ego"));
+    settingsIdentityTab.addEventListener("click", () => selectQuizType("identity"));
+    settingsEgoTab.addEventListener("click", () => selectQuizType("ego"));
+    for (const tab of [identityTab, egoTab, settingsIdentityTab, settingsEgoTab]) {
+      tab.addEventListener("keydown", event => {
+        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+        event.preventDefault();
+        const nextType = activeType === "identity" ? "ego" : "identity";
+        selectQuizType(nextType);
+        document.querySelector(nextType === "identity" ? "#identity-tab" : "#ego-tab").focus();
+      });
+    }
 
     for (const sinner of sinners) {
       const option = document.createElement("option");
@@ -514,14 +754,14 @@
         elapsedSeconds += 1;
         updateClock();
         if (timeLimitSeconds && elapsedSeconds >= timeLimitSeconds) {
-          finishGame(`시간 종료! ${found.size}개의 인격을 맞혔어요.`, true);
+          finishGame(`시간 종료! ${found.size}개의 ${currentTypeLabel()}을(를) 맞혔어요.`, true);
         }
       }, 1000);
     }
 
     function startGame() {
       const chosenSinner = sinnerSelect.value;
-      activeIdentities = allIdentities.filter(identity => chosenSinner === "all" || identity.sinner === chosenSinner);
+      activeIdentities = currentDataset().filter(identity => chosenSinner === "all" || identity.sinner === chosenSinner);
       found = new Set();
       hintsRemaining = Math.max(0, Math.min(20, Number.parseInt(hintInput.value, 10) || 0));
       hintInput.value = hintsRemaining;
@@ -529,11 +769,11 @@
       timeLimitSeconds = (Number(timeSelect.value) || 0) * 60;
       gameStarted = true;
       gameFinished = false;
-      document.querySelector("#quiz-mode").textContent = chosenSinner === "all" ? "모든 수감자" : chosenSinner;
+      document.querySelector("#quiz-mode").textContent = `${chosenSinner === "all" ? "모든 수감자" : chosenSinner} · ${currentTypeLabel()}`;
       updateClock();
       renderAnswers();
       updateProgress();
-      status.textContent = `${activeIdentities.length}개의 인격 이름을 맞혀보세요!`;
+      status.textContent = `${activeIdentities.length}개의 ${currentTypeLabel()} 이름을 맞혀보세요!`;
       dialog.close();
       startTimer();
       input.value = "";
@@ -571,7 +811,7 @@
         renderAnswers();
         updateProgress();
         if (found.size === activeIdentities.length) {
-          finishGame(`완벽해요! ${activeIdentities.length}개의 인격 이름을 모두 맞혔어요.`, false);
+          finishGame(`완벽해요! ${activeIdentities.length}개의 ${currentTypeLabel()} 이름을 모두 맞혔어요.`, false);
         }
       } else if (activeIdentities.some(matchesGuess)) {
         status.textContent = "이미 맞힌 이름이에요.";
@@ -589,7 +829,7 @@
       const pick = missing[Math.floor(Math.random() * missing.length)];
       hintsRemaining -= 1;
       updateProgress();
-      status.textContent = `힌트: 아직 찾지 못한 인격 중 하나는 ‘${pick.title[0]}’(으)로 시작해요.`;
+      status.textContent = `힌트: 아직 찾지 못한 ${currentTypeLabel()} 중 하나는 ‘${pick.title[0]}’(으)로 시작해요.`;
     });
 
     giveUpButton.addEventListener("click", () => {
@@ -619,6 +859,7 @@
       if (event.target === dialog) dialog.close();
     });
 
+    updateTabView();
     score.textContent = `0 / ${allIdentities.length}`;
     document.querySelector("#progress-label").textContent = "0%";
     progressTrack.setAttribute("aria-valuenow", "0");
