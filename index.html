@@ -785,7 +785,7 @@
 
     function normalize(value) {
       return value.trim()
-        .replace(/[【】]/g, bracket => bracket === "【" ? "[" : "]")
+        .replace(/(?:【변조】|\[변조\]|변조)/g, "")
         .replace(/\[[^\]]*\]/g, "")
         .replace(/開/g, "개")
         .replace(/\s*\(\s*개\s*\)/g, "(개)")
