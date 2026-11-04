@@ -570,6 +570,11 @@
       name: `${title} ${sinner}`,
       index
     }));
+    const hanjaOptionalEgoTitles = new Set([
+      "오혈읍루[汚血泣淚]",
+      "삼천대세계 [三千大世界]",
+      "즉저살(蝍蛆殺)"
+    ]);
     const sinners = [
       "이상", "파우스트", "돈키호테", "료슈", "뫼르소", "홍루",
       "히스클리프", "이스마엘", "로쟈", "싱클레어", "오티스", "그레고르"
@@ -799,9 +804,16 @@
           : identity.title === "로보토미 E.G.O:: 적안 · 참회"
             ? `${identity.title.replace(" · ", " • ")} ${identity.sinner}`
             : null;
+        const titleWithoutHanja = activeType === "ego" && hanjaOptionalEgoTitles.has(identity.title)
+          ? identity.title.replace(/\s*[\[(][^\])]*[\])]/g, "").trim()
+          : null;
+        const alternateHanjaName = titleWithoutHanja === null
+          ? null
+          : `${titleWithoutHanja} ${identity.sinner}`;
         const matchingTitles = activeIdentities.filter(item => normalize(item.title) === guess);
         return fullName === guess
           || (alternateName !== null && normalize(alternateName) === guess)
+          || (alternateHanjaName !== null && normalize(alternateHanjaName) === guess)
           || (matchingTitles.length === 1 && matchingTitles[0].index === identity.index);
       };
       const match = activeIdentities.find(identity => !found.has(identity.index) && matchesGuess(identity));
